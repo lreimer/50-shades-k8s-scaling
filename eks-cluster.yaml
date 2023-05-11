@@ -1,0 +1,43 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: eks-k8s-scaling
+  region: eu-central-1
+  version: '1.24'
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+  - metadata:
+      name: aws-load-balancer-controller
+      namespace: kube-system
+    wellKnownPolicies:
+      awsLoadBalancerController: true
+
+vpc:
+  clusterEndpoints:
+    privateAccess: true
+    publicAccess: true
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+managedNodeGroups:
+  - name: eks-k8s-scaling-ng-1
+    instanceType: t3.medium
+    minSize: 3
+    maxSize: 10
+    desiredCapacity: 5
+    volumeSize: 20
+    ssh:
+      allow: false
+    labels: {role: worker}
+    tags:
+      nodegroup-role: worker
+    iam:
+      withAddonPolicies:
+        albIngress: true
+        awsLoadBalancerController: true
+        cloudWatch: true
