@@ -33,7 +33,6 @@ create-gke-cluster:
 		--machine-type=e2-medium \
 		--logging=SYSTEM \
     	--monitoring=SYSTEM \
-		--region=$(GCP_REGION) \ 
 		--cluster-version=1.24
 	@kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=$$(gcloud config get-value core/account)
 	@kubectl cluster-info
