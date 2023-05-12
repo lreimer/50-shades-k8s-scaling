@@ -1,0 +1,75 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Pods
+    pods:
+      metric:
+        name: packets-per-second
+      target:
+        type: AverageValue
+        averageValue: 1000
+  - type: Object
+    object:
+      metric:
+        name: requests-per-second
+      target:
+        type: AverageValue
+        averageValue: 1000
+      describedObject:
+        apiVersion: networking.k8s.io/v1beta1
+        kind: Ingress
+        name: main-route
+  - type: External
+    external:
+      metric:
+        name: query-per-second
+      target:
+        type: AverageValue
+        averageValue: 1000
+      describedObject:
+        metric:
+          name: query-per-second
+        source:
+          prometheus:
+            endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
+            metricName: query-per-second
+            metricSelector:
+              matchLabels:
+                metric: query-per-second
