@@ -5,15 +5,31 @@ metadata:
   name: eks-k8s-scaling
   region: eu-central-1
   version: '1.24'
+  tags:
+    karpenter.sh/discovery: eks-k8s-scaling
 
 iam:
   withOIDC: true
   serviceAccounts:
   - metadata:
+      name: karpenter
+      namespace: karpenter
+    roleName: eks-k8s-scaling-karpenter
+    attachPolicyARNs:
+    - arn:aws:iam::450802564356:policy/KarpenterControllerPolicy-eks-k8s-scaling
+    roleOnly: true
+  - metadata:
       name: aws-load-balancer-controller
       namespace: kube-system
     wellKnownPolicies:
       awsLoadBalancerController: true
+
+iamIdentityMappings:
+- arn: "arn:aws:iam::450802564356:role/KarpenterNodeRole-eks-k8s-scaling"
+  username: system:node:{{EC2PrivateDNSName}}
+  groups:
+  - system:bootstrappers
+  - system:nodes
 
 vpc:
   clusterEndpoints:
@@ -25,11 +41,12 @@ cloudWatch:
     enableTypes: ["*"]
 
 managedNodeGroups:
-  - name: eks-k8s-scaling-ng-1
+  - name: eks-k8s-scaling-ng
     instanceType: t3.medium
-    minSize: 3
+    amiFamily: AmazonLinux2
+    minSize: 1
     maxSize: 10
-    desiredCapacity: 5
+    desiredCapacity: 3
     volumeSize: 20
     ssh:
       allow: false
