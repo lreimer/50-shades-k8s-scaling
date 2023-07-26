@@ -68,7 +68,7 @@ spec:
           name: query-per-second
         source:
           prometheus:
-            endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
+            endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090
             metricName: query-per-second
             metricSelector:
               matchLabels:
