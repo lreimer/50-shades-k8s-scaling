@@ -3,15 +3,28 @@ kind: Provisioner
 metadata:
   name: default
 spec:
+  # References cloud provider-specific custom resource
+  providerRef:
+    # the name of the AWSNodeTemplate
+    name: default
+
+  labels:
+    role: karpenter-worker
+
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
       values: ["spot"]
+
   limits:
     resources:
       cpu: 1000
-  providerRef:
-    name: default
+  
+  # Enables consolidation which attempts to reduce cluster cost by both 
+  # removing un-needed nodes and down-sizing those that can't be removed. 
+  # consolidation: 
+  #  enabled: true
+
   ttlSecondsAfterEmpty: 10
 ---
 apiVersion: karpenter.k8s.aws/v1alpha1
@@ -19,6 +32,7 @@ kind: AWSNodeTemplate
 metadata:
   name: default
 spec:
+  instanceProfile: eksctl-KarpenterNodeInstanceProfile-eks-k8s-scaling
   subnetSelector:
     karpenter.sh/discovery: eks-k8s-scaling
   securityGroupSelector:
