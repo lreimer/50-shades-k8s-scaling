@@ -56,7 +56,9 @@ kubectl apply -f deploy-consumer.yaml
 
 ## Cluster Autoscaling with Karpenter
 
-see https://karpenter.sh/v0.27.3/getting-started/getting-started-with-karpenter/
+Karpenter automatically provisions new nodes in response to unschedulable pods. Karpenter does this by observing events within the Kubernetes cluster, and then sending commands to the underlying cloud provider. Currently, only EKS on AWS is supported. See https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
+
+To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
 
 ## Maintainer
 
