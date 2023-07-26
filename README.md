@@ -35,9 +35,9 @@ kubectl label ns default goldilocks.fairwinds.com/enabled=true
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-kubectl create namespace prometheus
-helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace prometheus
-helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace prometheus
+kubectl create namespace monitoring
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace monitoring
 ```
 
 ## Event-Driven Autoscaling with Keda
