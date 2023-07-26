@@ -9,9 +9,6 @@ GCP_ZONE ?= europe-north1-b
 
 GITHUB_USER ?= lreimer
 
-create-eks-cluster:
-	@eksctl create cluster -f karpenter/eks-cluster.yaml
-
 prepare-gke-cluster:
 	@gcloud config set compute/zone europe-west1-b
 	@gcloud config set container/use_client_certificate False
