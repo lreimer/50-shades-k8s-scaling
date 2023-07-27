@@ -26,6 +26,8 @@ kubectl create namespace goldilocks
 helm install goldilocks --namespace goldilocks fairwinds-stable/goldilocks
 
 kubectl edit service goldilocks-dashboard -n goldilocks
+export GOLDILOCKS_IP=`kubectl get service goldilocks-dashboard -n goldilocks -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`
+
 kubectl label ns default goldilocks.fairwinds.com/enabled=true
 ```
 
