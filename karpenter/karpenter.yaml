@@ -32,7 +32,8 @@ kind: AWSNodeTemplate
 metadata:
   name: default
 spec:
-  instanceProfile: eksctl-KarpenterNodeInstanceProfile-eks-k8s-scaling
+  # instanceProfile: eksctl-KarpenterNodeInstanceProfile-eks-k8s-scaling
+  instanceProfile: KarpenterNodeInstanceProfile
   subnetSelector:
     karpenter.sh/discovery: eks-k8s-scaling
   securityGroupSelector:

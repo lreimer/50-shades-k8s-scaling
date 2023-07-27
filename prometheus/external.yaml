@@ -1,0 +1,29 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: External
+    external:
+      metric:
+        name: queries-per-second
+      target:
+        type: AverageValue
+        averageValue: 1000
+      describedObject:
+        metric:
+          name: queries-per-second
+        source:
+          prometheus:
+            endpoint: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+            metricName: queries-per-second
+            metricSelector:
+              matchLabels:
+                metric: queries-per-second
