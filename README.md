@@ -54,6 +54,9 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install rabbitmq --set auth.username=user --set auth.password=PASSWORD bitnami/rabbitmq --wait
 
 kubectl apply -f deploy-consumer.yaml
+kubectl get deployments
+kubectl get pods -w
+kubectl apply -f deploy-publisher-job.yaml
 ```
 
 ## Cluster Autoscaling with Karpenter
