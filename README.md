@@ -65,6 +65,45 @@ Karpenter automatically provisions new nodes in response to unschedulable pods. 
 
 To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
 
+```bash
+# add a deployment to demo cluster autoscaling
+kubectl apply -f karpenter/inflate.yaml
+
+# to trigger and watch a cluster ScaleUp
+kubectl scale deployment inflate --replicas 5
+kubectl get pods
+kubectl describe pod inflate-644ff677b7-jgw8r
+kubectl get events
+kubectl get nodes -w
+
+# to trigger and watch a cluster ScaleDown
+kubectl scale deployment inflate --replicas 0
+kubectl get pods
+kubectl get events
+kubectl get nodes -w
+```
+
+## Google GKE with Cluster Autoscaler
+
+```bash
+# create GKE cluster using gcloud CLI
+gcloud container clusters create gke-k8s-scaling \
+    # enable GKE addons such as HPA support
+	--addons HttpLoadBalancing,HorizontalPodAutoscaling \
+    
+    # enable VPA support
+	--enable-vertical-pod-autoscaling \
+
+    # enable cluster autoscaling
+    # use profile for moderate (Balanced) or aggessive (Optimize-utilization) mode
+	--enable-autoscaling \
+	--autoscaling-profile=optimize-utilization \
+    
+    # specify initial node pool size and scaling limits
+	--num-nodes=1 \
+	--min-nodes=1 --max-nodes=5
+```
+
 ## Maintainer
 
 M.-Leander Reimer (@lreimer), <mario-leander.reimer@qaware.de>
