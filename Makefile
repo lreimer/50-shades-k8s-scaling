@@ -58,4 +58,4 @@ delete-eks-cluster:
 	@eksctl delete cluster -f eks-k8s-scaling.yaml
 
 delete-gke-cluster:
-	@gcloud container clusters delete gke-k8s-scaling --async --quiet
+	@gcloud container clusters delete gke-k8s-scaling --async --quiet --region=$(GCP_REGION)
