@@ -2,6 +2,20 @@
 
 Demo repository for my talk on Fifty Shades of Kubernetes Autoscaling.
 
+## Prometheus Adapter Metrics API
+
+```bash
+# for some K8s distributions you need to install the Metrics Server
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+kubectl create namespace monitoring
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace monitoring
+```
+
 ## Horizontal Pod Autoscaler
 
 ```bash
@@ -29,17 +43,6 @@ kubectl edit service goldilocks-dashboard -n goldilocks
 export GOLDILOCKS_IP=`kubectl get service goldilocks-dashboard -n goldilocks -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`
 
 kubectl label ns default goldilocks.fairwinds.com/enabled=true
-```
-
-## Prometheus Adapter Metrics API
-
-```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-kubectl create namespace monitoring
-helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
-helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace monitoring
 ```
 
 ## Event-Driven Autoscaling with Keda
