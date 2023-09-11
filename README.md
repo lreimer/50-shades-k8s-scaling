@@ -19,10 +19,10 @@ helm install prometheus-adapter prometheus-community/prometheus-adapter --namesp
 ## Horizontal Pod Autoscaler
 
 ```bash
-kubectl apply -f examples/php-apache.yaml
+kubectl apply -f horizontal/php-apache.yaml
 
 kubectl autoscale deployment php-apache --cpu-percent=50 --min=1 --max=10
-kubectl apply -f examples/hpa.yaml
+kubectl apply -f horizontal/hpa.yaml
 
 kubectl get hpa php-apache --watch
 kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://php-apache; done"
@@ -31,8 +31,8 @@ kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never --
 ## Vertical Pod Autoscaler
 
 ```bash
-kubectl apply -f examples/hamster.yaml
-kubectl apply -f examples/vpa.yaml
+kubectl apply -f vertical/hamster.yaml
+kubectl apply -f vertical/vpa.yaml
 kubectl describe vpa hamster-vpa
 
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
@@ -56,34 +56,10 @@ helm install keda kedacore/keda --namespace keda
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install rabbitmq --set auth.username=user --set auth.password=PASSWORD bitnami/rabbitmq --wait
 
-kubectl apply -f deploy-consumer.yaml
+kubectl apply -f keda/deploy-consumer.yaml
 kubectl get deployments
 kubectl get pods -w
-kubectl apply -f deploy-publisher-job.yaml
-```
-
-## Cluster Autoscaling with Karpenter
-
-Karpenter automatically provisions new nodes in response to unschedulable pods. Karpenter does this by observing events within the Kubernetes cluster, and then sending commands to the underlying cloud provider. Currently, only EKS on AWS is supported. See https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
-
-To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
-
-```bash
-# add a deployment to demo cluster autoscaling
-kubectl apply -f karpenter/inflate.yaml
-
-# to trigger and watch a cluster ScaleUp
-kubectl scale deployment inflate --replicas 5
-kubectl get pods
-kubectl describe pod inflate-644ff677b7-jgw8r
-kubectl get events
-kubectl get nodes -w
-
-# to trigger and watch a cluster ScaleDown
-kubectl scale deployment inflate --replicas 0
-kubectl get pods
-kubectl get events
-kubectl get nodes -w
+kubectl apply -f keda/deploy-publisher-job.yaml
 ```
 
 ## Google GKE with Cluster Autoscaler
@@ -105,6 +81,43 @@ gcloud container clusters create gke-k8s-scaling \
     # specify initial node pool size and scaling limits
 	--num-nodes=1 \
 	--min-nodes=1 --max-nodes=5
+```
+
+## Cluster Autoscaling with Karpenter
+
+Karpenter automatically provisions new nodes in response to unschedulable pods. Karpenter does this by observing events within the Kubernetes cluster, and then sending commands to the underlying cloud provider. Currently, only EKS on AWS is supported. See https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
+
+To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
+
+```bash
+# configure Karpenter behaviour
+kubectl apply -f karpenter/karpenter.yaml
+
+# add a deployment to demo cluster autoscaling
+kubectl apply -f karpenter/inflate.yaml
+
+# to trigger and watch a cluster ScaleUp
+kubectl scale deployment inflate --replicas 5
+kubectl get pods
+kubectl describe pod inflate-644ff677b7-jgw8r
+kubectl get events
+kubectl get nodes -w
+
+# to trigger and watch a cluster ScaleDown
+kubectl scale deployment inflate --replicas 0
+kubectl get pods
+kubectl get events
+kubectl get nodes -w
+```
+
+## Descheduler for Kubernetes
+
+For more details and usage instructions, see https://github.com/kubernetes-sigs/descheduler
+
+```bash
+# deploy Descheduler either as Job, CronJob or Deployment
+# either via Helm, Kustomize or plain YAML
+kubectl apply -k descheduler/v0.26.1/
 ```
 
 ## Maintainer
