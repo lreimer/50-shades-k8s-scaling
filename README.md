@@ -2,6 +2,33 @@
 
 Demo repository for my talk on Fifty Shades of Kubernetes Autoscaling.
 
+## Setup
+
+```bash
+export GITHUB_USER=lreimer
+export GITHUB_TOKEN=
+
+# for the GKE cluster setup
+make create-gke-cluster
+make bootstrap-gke-flux2
+
+kubectl edit service kube-prometheus-stack-grafana -n monitoring
+export GRAFANA_IP=`kubectl get service kube-prometheus-stack-grafana -n monitoring -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`
+
+kubectl edit service goldilocks-dashboard -n goldilocks
+export GOLDILOCKS_IP=`kubectl get service goldilocks-dashboard -n goldilocks -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`
+
+# for the EKS cluster setup
+make create-eks-cluster
+make bootstrap-eks-flux2
+
+kubectl edit service kube-prometheus-stack-grafana -n monitoring
+export GRAFANA_HOSTNAME=`kubectl get service kube-prometheus-stack-grafana -n monitoring -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"`
+```
+
+
+
+
 ## Prometheus Adapter Metrics API
 
 ```bash
