@@ -1,0 +1,3 @@
+name: gke-cluster-flux2
+description: A GKE cluster with Flux2 TypeScript Pulumi program
+runtime: nodejs

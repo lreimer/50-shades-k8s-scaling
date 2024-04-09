@@ -1,0 +1,3 @@
+name: gke-cluster-plain
+description: A minimal GKE Cluster TypeScript Pulumi program
+runtime: nodejs

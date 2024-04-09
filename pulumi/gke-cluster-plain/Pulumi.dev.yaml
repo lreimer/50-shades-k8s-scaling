@@ -1,0 +1,3 @@
+config:
+  gcp:project: cloud-native-experience-lab
+  gcp:zone: europe-west1-b

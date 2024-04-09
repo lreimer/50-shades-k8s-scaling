@@ -1,0 +1,3 @@
+name: eks-cluster-plain
+description: A minimal EKS Cluster TypeScript Pulumi program
+runtime: nodejs

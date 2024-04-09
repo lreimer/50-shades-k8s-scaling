@@ -1,0 +1,12 @@
+{
+    "name": "gke-cluster-plain",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^14"
+    },
+    "dependencies": {
+        "@pulumi/gcp": "^6.0.0",
+        "@pulumi/kubernetes": "^3.22.1",
+        "@pulumi/pulumi": "^3.0.0"
+    }
+}
