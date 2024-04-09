@@ -1,11 +1,11 @@
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
-  name: cron-scaledobject
+  name: cron-scaler
   namespace: default
 spec:
   scaleTargetRef:
-    name: my-deployment
+    name: sleep-deployment
   triggers:
   - type: cron
     metadata:
