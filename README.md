@@ -26,7 +26,75 @@ kubectl edit service kube-prometheus-stack-grafana -n monitoring
 export GRAFANA_HOSTNAME=`kubectl get service kube-prometheus-stack-grafana -n monitoring -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"`
 ```
 
+## Cluster Rightsizing
 
+Depending on the Cloud provider there are different options to autoscale and thus rightsize the cluster itself, so that the number of nodes is sufficient to handle the current load but not more.
+
+```bash
+# add a deployment to demo cluster autoscaling
+kubectl apply -f karpenter/inflate.yaml
+
+# to trigger and watch a cluster ScaleUp
+kubectl scale deployment inflate --replicas 5
+kubectl get pods
+kubectl describe pod inflate-644ff677b7-jgw8r
+kubectl events
+kubectl get nodes -w
+
+# to trigger and watch a cluster ScaleDown
+kubectl scale deployment inflate --replicas 0
+kubectl get pods
+kubectl events
+kubectl get nodes -w
+```
+
+## Google GKE with Cluster Autoscaler
+
+```bash
+# create GKE cluster using gcloud CLI
+gcloud container clusters create gke-k8s-scaling \
+    # enable GKE addons such as HPA support
+	--addons HttpLoadBalancing,HorizontalPodAutoscaling \
+    
+    # enable VPA support
+	--enable-vertical-pod-autoscaling \
+
+    # enable cluster autoscaling
+    # use profile for moderate (Balanced) or aggessive (Optimize-utilization) mode
+	--enable-autoscaling \
+	--autoscaling-profile=optimize-utilization \
+    
+    # specify initial node pool size and scaling limits
+	--num-nodes=1 \
+	--min-nodes=1 --max-nodes=5
+```
+
+## Cluster Autoscaling with Karpenter
+
+Karpenter automatically provisions new nodes in response to unschedulable pods. Karpenter does this by observing events within the Kubernetes cluster, and then sending commands to the underlying cloud provider. Currently, only EKS on AWS is supported. See https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
+
+To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
+
+```bash
+# configure Karpenter behaviour
+kubectl apply -f karpenter/karpenter.yaml
+
+# add a deployment to demo cluster autoscaling
+kubectl apply -f karpenter/inflate.yaml
+
+# to trigger and watch a cluster ScaleUp
+kubectl scale deployment inflate --replicas 5
+kubectl get pods
+kubectl describe pod inflate-644ff677b7-jgw8r
+kubectl get events
+kubectl get nodes -w
+
+# to trigger and watch a cluster ScaleDown
+kubectl scale deployment inflate --replicas 0
+kubectl get pods
+kubectl get events
+kubectl get nodes -w
+```
 
 
 ## Prometheus Adapter Metrics API
@@ -89,53 +157,6 @@ kubectl get pods -w
 kubectl apply -f keda/deploy-publisher-job.yaml
 ```
 
-## Google GKE with Cluster Autoscaler
-
-```bash
-# create GKE cluster using gcloud CLI
-gcloud container clusters create gke-k8s-scaling \
-    # enable GKE addons such as HPA support
-	--addons HttpLoadBalancing,HorizontalPodAutoscaling \
-    
-    # enable VPA support
-	--enable-vertical-pod-autoscaling \
-
-    # enable cluster autoscaling
-    # use profile for moderate (Balanced) or aggessive (Optimize-utilization) mode
-	--enable-autoscaling \
-	--autoscaling-profile=optimize-utilization \
-    
-    # specify initial node pool size and scaling limits
-	--num-nodes=1 \
-	--min-nodes=1 --max-nodes=5
-```
-
-## Cluster Autoscaling with Karpenter
-
-Karpenter automatically provisions new nodes in response to unschedulable pods. Karpenter does this by observing events within the Kubernetes cluster, and then sending commands to the underlying cloud provider. Currently, only EKS on AWS is supported. See https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/
-
-To easily install EKS with Karpenter, the `eksctl` tool can be used because it brings Karpenter support. See https://eksctl.io/usage/eksctl-karpenter/
-
-```bash
-# configure Karpenter behaviour
-kubectl apply -f karpenter/karpenter.yaml
-
-# add a deployment to demo cluster autoscaling
-kubectl apply -f karpenter/inflate.yaml
-
-# to trigger and watch a cluster ScaleUp
-kubectl scale deployment inflate --replicas 5
-kubectl get pods
-kubectl describe pod inflate-644ff677b7-jgw8r
-kubectl get events
-kubectl get nodes -w
-
-# to trigger and watch a cluster ScaleDown
-kubectl scale deployment inflate --replicas 0
-kubectl get pods
-kubectl get events
-kubectl get nodes -w
-```
 
 ## Descheduler for Kubernetes
 
