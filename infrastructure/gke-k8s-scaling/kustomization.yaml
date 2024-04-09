@@ -4,3 +4,5 @@ resources:
   - monitoring/
   - goldilocks/
   - keda/
+  - https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
+  - https://github.com/kube-green/kube-green/releases/download/v0.5.1/kube-green.yaml  

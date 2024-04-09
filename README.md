@@ -96,21 +96,6 @@ kubectl get events
 kubectl get nodes -w
 ```
 
-
-## Prometheus Adapter Metrics API
-
-```bash
-# for some K8s distributions you need to install the Metrics Server
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-kubectl create namespace monitoring
-helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
-helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace monitoring
-```
-
 ## Horizontal Pod Autoscaler
 
 ```bash
@@ -130,6 +115,8 @@ kubectl apply -f vertical/hamster.yaml
 kubectl apply -f vertical/vpa.yaml
 kubectl describe vpa hamster-vpa
 
+kubectl label ns default goldilocks.fairwinds.com/enabled=true
+
 helm repo add fairwinds-stable https://charts.fairwinds.com/stable
 kubectl create namespace goldilocks
 helm install goldilocks --namespace goldilocks fairwinds-stable/goldilocks
@@ -137,10 +124,60 @@ helm install goldilocks --namespace goldilocks fairwinds-stable/goldilocks
 kubectl edit service goldilocks-dashboard -n goldilocks
 export GOLDILOCKS_IP=`kubectl get service goldilocks-dashboard -n goldilocks -o jsonpath="{.status.loadBalancer.ingress[0].ip}"`
 
-kubectl label ns default goldilocks.fairwinds.com/enabled=true
+# use Goldilocks dashboard to display recommendations
+kubectl get service goldilocks-dashboard -n goldilocks
+open http://$GOLDILOCKS_IP:80
+```
+
+## Prometheus Custom Metrics and HPA
+
+see https://github.com/kubernetes-sigs/prometheus-adapter
+
+```bash
+# for some K8s distributions you need to install the Metrics Server
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+kubectl create namespace monitoring
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+helm install prometheus-adapter prometheus-community/prometheus-adapter --namespace monitoring
+```
+
+## Time-based Autoscaling using kube-green
+
+Don't waste resources! Many workloads on dev/qa environments stay running during weekends,
+non working hours or at night. _kube-green_ is a simple K8s addon to automatically shutdown
+and restart resources based on when they are needed (or not).
+
+```yaml
+apiVersion: kube-green.com/v1alpha1
+kind: SleepInfo
+metadata:
+  name: non-working-hours
+spec:
+  weekdays: "1-5"
+  sleepAt: "18:00"
+  wakeUpAt: "08:00"
+  timeZone: "Europe/Rome"
+  suspendCronJobs: true
+  excludeRef:
+    - apiVersion: "apps/v1"
+      kind:       Deployment
+      name:       no-sleep-deployment
+    - matchLabels: 
+        kube-green.dev/exclude: "true"
+```
+
+To see some details when the above `SleepInfo` resource will be schedules next, you can have a look at the log output from the _kube-green-controller-manager_ pod.
+```bash
+kubectl logs pod/kube-green-controller-manager-5855848d7f-dftxd -n kube-green
 ```
 
 ## Event-Driven Autoscaling with Keda
+
+_KEDA is a Kubernetes-based Event Driven Autoscaler that allows granular scaling of workloads in Kubernetes, based on multiple defined parameters, leveraging the concept of built for purpose scalers._
 
 ```bash
 helm repo add kedacore https://kedacore.github.io/charts
@@ -151,12 +188,62 @@ helm install keda kedacore/keda --namespace keda
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install rabbitmq --set auth.username=user --set auth.password=PASSWORD bitnami/rabbitmq --wait
 
+# https://keda.sh/docs/2.12/scalers/metrics-api/
+# https://keda.sh/docs/2.12/scalers/loki/
+# https://keda.sh/docs/2.12/scalers/influxdb/
+
+# do the same as before with kube-green
+kubectl apply -f keda/cron-scaledobject.yaml
+
 kubectl apply -f keda/deploy-consumer.yaml
 kubectl get deployments
 kubectl get pods -w
 kubectl apply -f keda/deploy-publisher-job.yaml
 ```
 
+## Carbon Aware Scaling and Temporal Shifting with KEDA
+
+_To build a Kubernetes application with carbon aware scaling, we need to implement demand shaping that scales workloads based on the current carbon intensity of the location where the Kubernetes cluster is deployed. To achieve this using KEDA, you can set up the newly introduced KEDA carbon-aware scaler for your Kubernetes workloads and define your carbon intensity scaling thresholds._  
+
+(https://www.tfir.io/carbon-aware-kubernetes-scaling-a-step-towards-greener-cloud-computing/)
+
+```bash
+# detailled installation instructions can be found in the Github repos
+open https://github.com/Azure/carbon-aware-keda-operator
+open https://github.com/Azure/kubernetes-carbon-intensity-exporter
+
+# you will also need the sources
+# install the intensity exporter
+git clone https://github.com/Azure/kubernetes-carbon-intensity-exporter.git
+cd kubernetes-carbon-intensity-exporter
+
+export WATTTIME_USERNAME=lreimer
+export WATTTIME_PASSWORD=
+export LOCATION=se
+# export LOCATION=westus
+
+helm install carbon-intensity-exporter \
+        --set carbonDataExporter.region=$LOCATION \
+        --set wattTime.username=$WATTTIME_USERNAME \
+        --set wattTime.password=$WATTTIME_PASSWORD \
+        ./charts/carbon-intensity-exporter
+
+# check the carbon data
+kubectl get pod -n kube-system | grep carbon-intensity-exporter
+kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.data}' | jq
+kubectl get cm -n kube-system carbon-intensity -o jsonpath='{.binaryData.data}' | base64 --decode | jq
+
+# install the carbon aware operator
+git clone https://github.com/Azure/carbon-aware-keda-operator.git
+cd carbon-aware-keda-operator
+version=$(git describe --abbrev=0 --tags)
+kubectl apply -f "https://github.com/Azure/carbon-aware-keda-operator/releases/download/${version}/carbonawarekedascaler-${version}.yaml"
+
+# deply the carbon aware scaler
+kubectl apply -f keda/deploy-consumer.yaml
+kubectl apply -f keda/deploy-publisher-job.yaml
+kubectl apply -f keda/carbon-aware-scaler.yaml
+```
 
 ## Descheduler for Kubernetes
 
