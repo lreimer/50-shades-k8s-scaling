@@ -4,7 +4,7 @@ kind: ClusterConfig
 metadata:
   name: eks-k8s-scaling
   region: eu-north-1
-  version: '1.24'
+  version: '1.28'
   tags:
     karpenter.sh/discovery: eks-k8s-scaling
 
@@ -36,7 +36,7 @@ managedNodeGroups:
   - name: eks-k8s-scaling-ng
     instanceType: t3.medium
     minSize: 1
-    maxSize: 3
+    maxSize: 5
     desiredCapacity: 3
     volumeSize: 20
     ssh:
