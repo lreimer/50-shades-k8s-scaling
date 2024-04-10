@@ -17,13 +17,13 @@ variable "gke_cluster_name" {
 }
 
 variable "gke_min_nodes" {
-  default     = 3
+  default     = 1
   description = "Minimum number of GKE nodes"
   type        = number
 }
 
 variable "gke_max_nodes" {
-  default     = 3
+  default     = 5
   description = "Maximum number of GKE nodes"
   type        = number
 }
