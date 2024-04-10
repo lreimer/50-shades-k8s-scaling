@@ -4,27 +4,27 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "4.27.0"
+      version = "5.24.0"
     }
     github = {
       source  = "integrations/github"
-      version = ">= 4.5.2"
+      version = ">= 6.2.1"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.0.2"
+      version = ">= 2.28.1"
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.10.0"
+      version = ">= 1.14.0"
     }
     flux = {
       source  = "fluxcd/flux"
-      version = ">= 0.0.13"
+      version = ">= 1.2.3"
     }
     tls = {
       source  = "hashicorp/tls"
-      version = "3.1.0"
+      version = "4.0.5"
     }
   }
 }
